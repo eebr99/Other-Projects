@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Fancy Place</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- font awesome cdn -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="../static/style.css">
+  </head>
+  <body>
+
+    <!-- header  -->
+    <header>
+      <div class = "container">
+        <!-- navbar -->
+        <nav class = "navbar">
+          <a href = "#" class = "navbar-brand">Fancy Place</a>
+          <button type = "button" class = "navbar-toggler">
+            <i class = "fas fa-bars"></i>
+          </button>
+          <div class = "navbar-collapse">
+            <ul>
+                <li> <a href = "{{ url_for('about') }}">Learn about Me</a> </li>
+                <li> <a href = "{{ url_for('rating') }}">Rate Me!</a> </li>
+                <li> <a href = "{{ url_for('logout') }}">Bye Bye!</a> </li>
+            </ul>
+          </div>
+
+          <div class = "cart">
+            <button type = "button" id = "cart-btn">
+              <i class = "fas fa-shopping-cart"></i>
+              <span id = "cart-count-info"></span>
+            </button>
+
+            <div class = "cart-container">
+              <div class = "cart-list">
+                <!-- single item -->
+                <!-- <div class = "cart-item">
+                  <img src = "URl" alt = "product image">
+                  <div class = "cart-item-info">
+                    <h3 class = "cart-item-name">Demon eye </h3>
+                    <span class = "cart-item-category">entre </span>
+                    <span class = "cart-item-price">$100.00</span>
+                  </div>
+
+                  <button type = "button" class = "cart-item-del-btn">
+                    <i class = "fas fa-times"></i>
+                  </button>
+                </div> -->
+                <!-- end of single item  -->
+
+              </div>
+
+              <div class = "cart-total">
+                <h3>Total: $</h3>
+                <span id = "cart-total-value"></span>
+
+                  <button type="button" class="btn" onclick="location.href='payment'">Check out</button>
+              </div>
+            </div>
+          </div>
+        </nav>
+        <!-- end of navbar -->
+
+        <!-- banner -->
+        <div class = "banner">
+          <div class = "banner-content">
+            <h1>Delicous At The Click Of A Button</h1>
+            <p class = "text">Some fancy description </p>
+            <div class = "btns">
+
+            <button class="btn" onclick="location.href='rating'" type="button">Leave us a Review</button>
+
+            </div>
+          </div>
+        </div>
+        <!-- end of banner  -->
+      </div>
+    </header>
+    <!-- end of header -->
+
+    <!-- products section  -->
+    <section class = "products">
+      <div class = "container">
+        <h2>Our Products</h2>
+        <div class = "product-list">
+<!-- single item -->
+          <!-- <div class = "product-item">
+            <div class = "product-img">
+              <img src = "URL" alt = "product image">
+              <button type = "button" class = "add-to-cart-btn">
+                <i class = "fas fa-shopping-cart"></i>Add To Cart
+              </button>
+            </div>
+
+            <div class = "product-content">
+              <h3 class = "product-name">Spagetti</h3>
+              <span class = "product-category">Entre</span>
+              <p class = "product-price">$19.00</p>
+            </div>
+          </div> -->
+          <!-- end of single item -->
+        </div>
+      </div>
+    </section>
+    <!-- end of products section -->
+
+    <!-- footer -->
+    <footer>
+      <div class = "footer-banner">
+        <div class = "container">
+          <h2>Fancy Stuff Down Here</h2>
+          <p class = "text">Some Fancy Description</p>
+        </div>
+      </div>
+
+      <div class = "container">
+        <div class = "social-icons">
+          <a href = "#">
+            <i class = "fab fa-facebook-f"></i>
+          </a>
+          <a href = "#">
+            <i class = "fab fa-twitter"></i>
+          </a>
+          <a href = "#">
+            <i class = "fab fa-instagram"></i>
+          </a>
+          <a href = "#">
+            <i class = "fab fa-pinterest"></i>
+          </a>
+          <a href = "#">
+            <i class = "fab fa-linkedin"></i>
+          </a>
+        </div>
+      </div>
+    </footer>
+    <!-- end of footer -->
+
+
+
+
+
+
+
+    <script>
+
+
+// variables and constants
+const cartContainer = document.querySelector('.cart-container');
+const productList = document.querySelector('.product-list');
+const cartList = document.querySelector('.cart-list');
+const cartTotalValue = document.getElementById('cart-total-value');
+const cartCountInfo = document.getElementById('cart-count-info');
+let cartItemID = 1;
+
+eventListeners();
+
+// all event listeners
+function eventListeners(){
+    window.addEventListener('DOMContentLoaded', () => {
+        loadJSON();
+        loadCart();
+    });
+    // toggle navbar when toggle button is clicked
+    document.querySelector('.navbar-toggler').addEventListener('click', () => {
+        document.querySelector('.navbar-collapse').classList.toggle('show-navbar');
+    });
+
+    // show/hide cart container
+    document.getElementById('cart-btn').addEventListener('click', () => {
+        cartContainer.classList.toggle('show-cart-container');
+    });
+
+    // add to cart
+    productList.addEventListener('click', purchaseProduct);
+
+    // delete from cart
+    cartList.addEventListener('click', deleteProduct);
+}
+
+// update cart info
+function updateCartInfo(){
+    let cartInfo = findCartInfo();
+    cartCountInfo.textContent = cartInfo.productCount;
+    cartTotalValue.textContent = cartInfo.total;
+}
+
+// load product items content form JSON file
+
+function loadJSON() {
+    fetch('static/food.json')
+    .then(response => response.json())
+    .then(data =>{
+        let html = '';
+        data.forEach(product => {
+            html += `
+                <div class = "product-item">
+                    <div class = "product-img">
+                        <img src = "${product.imgSrc}" alt = "product image">
+                        <button type = "button" class = "add-to-cart-btn">
+                            <i class = "fas fa-shopping-cart"></i>Add To Cart
+                        </button>
+                    </div>
+                    <div class = "product-content">
+                        <h3 class = "product-name">${product.name}</h3>
+                        <span class = "product-category">${product.category}</span>
+                        <p class = "product-price">$${product.price}</p>
+                    </div>
+                </div>
+            `;
+        });
+        productList.innerHTML = html;
+    })
+    .catch(error => {
+        alert(`User live server or local server`);
+
+    })
+}
+
+
+// purchase product
+function purchaseProduct(e){
+    if(e.target.classList.contains('add-to-cart-btn')){
+        let product = e.target.parentElement.parentElement;
+        getProductInfo(product);
+    }
+}
+
+// get product info after add to cart button click
+function getProductInfo(product){
+    let productInfo = {
+        id: cartItemID,
+        imgSrc: product.querySelector('.product-img img').src,
+        name: product.querySelector('.product-name').textContent,
+        category: product.querySelector('.product-category').textContent,
+        price: product.querySelector('.product-price').textContent
+    }
+    cartItemID++;
+    addToCartList(productInfo);
+    saveProductInStorage(productInfo);
+}
+
+// add the selected product to the cart list
+function addToCartList(product){
+    const cartItem = document.createElement('div');
+    cartItem.classList.add('cart-item');
+    cartItem.setAttribute('data-id', `${product.id}`);
+    cartItem.innerHTML = `
+        <img src="${product.imgSrc}" alt = "product image">
+        <div class = "cart-item-info">
+            <h3 class = "cart-item-name">${product.name}</h3>
+            <span class = "cart-item-category">${product.category}</span>
+            <span class = "cart-item-price">${product.price}</span>
+        </div>
+        <button type = "button" class = "cart-item-del-btn">
+            <i class = "fas fa-times"></i>
+        </button>
+    `;
+    cartList.appendChild(cartItem);
+}
+
+// save the product in the local storage
+function saveProductInStorage(item){
+    let products = getProductFromStorage();
+    products.push(item);
+    localStorage.setItem('products', JSON.stringify(products));
+    updateCartInfo();
+}
+
+// get all the products info if there is any in the local storage
+function getProductFromStorage(){
+    return localStorage.getItem('products') ? JSON.parse(localStorage.getItem('products')) : [];
+    // returns empty array if there isn't any product info
+}
+
+// load carts product
+function loadCart(){
+    let products = getProductFromStorage();
+    if(products.length < 1){
+        cartItemID = 1; // if there is no any product in the local storage
+    } else {
+        cartItemID = products[products.length - 1].id;
+        cartItemID++;
+        // else get the id of the last product and increase it by 1
+    }
+    products.forEach(product => addToCartList(product));
+
+    // calculate and update UI of cart info
+    updateCartInfo();
+}
+
+// calculate total price of the cart and other info
+function findCartInfo(){
+
+    let products = getProductFromStorage();
+    let total = products.reduce((acc, product) => {
+        let price = parseFloat(product.price.substr(1)); // removing dollar sign
+        return acc += price;
+    }, 0); // adding all the prices
+
+    return{
+        total: total.toFixed(2),
+        productCount: products.length
+    }
+}
+
+// delete product from cart list and local storage
+function deleteProduct(e){
+    let cartItem;
+    if(e.target.tagName === "BUTTON"){
+        cartItem = e.target.parentElement;
+        cartItem.remove(); // this removes from the DOM only
+    } else if(e.target.tagName === "I"){
+        cartItem = e.target.parentElement.parentElement;
+        cartItem.remove(); // this removes from the DOM only
+    }
+
+    let products = getProductFromStorage();
+    let updatedProducts = products.filter(product => {
+        return product.id !== parseInt(cartItem.dataset.id);
+    });
+    localStorage.setItem('products', JSON.stringify(updatedProducts)); // updating the product list after the deletion
+    updateCartInfo();
+}
+
+
+    </script>
+  </body>
+</html>

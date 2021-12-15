@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Movies</title>
+    <style>
+        body {
+            background-image: url('/static/cinema.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: 50% 50%;
+        }
+
+        #myInput {
+            background-position: 10px 12px;
+            background-repeat: no-repeat;
+            width: 100%;
+            font-size: 16px;
+            padding: 12px 20px 12px 40px;
+            border: 1px solid #ddd;
+            margin-bottom: 12px;
+            color: ghostwhite;
+            background-color: transparent;
+        }
+
+        #next{ background-color: indianred; font-family: "Poor Richard";}
+        #prev{ font-family: "Poor Richard";}
+        #quantity{ background-color: transparent; color: whitesmoke; font-weight: bold;}
+
+        .btn-primary {
+            color: #fff;
+            background-color: transparent;
+            border-color: #0d6efd;
+        }
+
+        .card-body{
+            color: mediumpurple;
+        }
+        .card-title{
+            font-family: "Book Antiqua";
+        }
+        .card-text{
+            color: transparent;
+            font-style: italic;
+        }
+        .card-text:hover{
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-3">
+        <h2 style="text-align: center; background-color: saddlebrown; color: antiquewhite;font-family: 'Lucida Handwriting'">Movies Database</h2>
+
+        <input type=" text" id="myInput" onkeyup="search()" placeholder="look for something..." title=""type something...>
+
+        <div class="dropdown">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+              Sort By
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="javascript:latest()">Latest</a></li>
+              <li><a class="dropdown-item" href="javascript:oldest()">Oldest</a></li>
+              <li><a class="dropdown-item" href="javascript:moviename()">Name</a></li>
+            </ul>
+        </div>
+        <br>
+        <div id="movies"></div>
+        <button type="button" id="prev" class="btn btn-success" onclick="previouspage()">Prev</button>
+        <button type="button" id="next" class="btn btn-success" onclick="nextpage()">Next</button>
+        <div class="dropdown">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+              Display by:
+            </button>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="javascript:max10()">10</a></li>
+              <li><a class="dropdown-item" href="javascript:max20()">20</a></li>
+              <li><a class="dropdown-item" href="javascript:max30()">30</a></li>
+            </ul>
+        </div>
+            <input type="number" id="quantity" name="quantity" placeholder="or desired number..." min="1">
+            <input type="submit" value="Submit" onclick="customMax()">
+    </div>
+    <script>
+        var d; // this is the beginning of reading and being able to use the JSON file
+        fetch('/static/movies.json') //fetching
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                appendData(data, 0);
+                d = data;
+            })
+            .catch(function (err) { //catching
+                console.log('error: ' + err);
+            });
+        var per_page = 5; //setting initial variables to be displayed at start
+        var j = 0; //position of where we are
+
+        function latest() //this is to sort by the latest, or most recent movies going to the oldest
+        {
+            document.getElementById("movies").innerHTML = ""; //getting our movies
+            var lat = d.sort(function(obj1, obj2) { //start of the sort
+            // Descending: newest to oldest
+                return obj2.year - obj1.year;
+            });
+            d = lat; // set d equal to lat
+            appendData(lat, 0);
+        } //now sorted newest to oldest
+
+        //the following is sorting by oldest, will be similar to latest()
+        function oldest()
+        {
+            document.getElementById("movies").innerHTML = "";
+            var old = d.sort(function(obj1, obj2) {
+                return obj1.year - obj2.year; //here we return obj1 - obj2, the opposite of latest() to get what we want
+            })
+            d = old; //d is set to old
+            appendData(old, 0); //data appended
+        } //now sorted by oldest.
+
+        //now we will sort by movie name
+        function moviename()
+        {
+            document.getElementById("movies").innerHTML = ""; //getting our movies
+            var name = d.sort(function(a,b){
+                if(a.title < b.title) {return -1;} //if a is less than b, return -1
+                if(a.title > b.title) {return 1;} //if a is greater than b, return 1
+                return 0;
+            })
+            d = name;
+            appendData(name, 0);
+        } //we are now sorted by name
+
+        //now the function to search for and display user input dynamically
+        function search()
+        {
+            let input = document.getElementById('myInput').value
+            input = input.toLowerCase();
+            let x = document.getElementById('movies').innerHTML = "";
+
+            for (i = 0; i < x.length; i++) {
+                if (!x.innerHTML.toLowerCase().includes(input)) {
+                    x.style.display="none";
+                }
+                else {
+                    x.style.display="list-item";
+                }
+             }
+        } //currently does update dynamically, but does not yield any results, just a blank slate
+
+        //functions to display either 10, 20, or 30 elements, we update and display according to choice
+        function max10() {document.getElementById("movies").innerHTML=""; per_page = 10; appendData(d, 0);}
+        function max20() {document.getElementById("movies").innerHTML=""; per_page = 20; appendData(d, 0);}
+        function max30() {document.getElementById("movies").innerHTML=""; per_page = 30; appendData(d, 0);}
+
+        //function to display items based on input given by user
+        function customMax()
+        {
+            var lim = document.getElementById("quantity").value;
+            per_page = lim;
+            document.getElementById("movies").innerHTML = "";
+
+            appendData(d, 0);
+        } //does work, but if you click to another page, the items displayed will jump in amount, can be reset by
+            //choosing another custom limit or one of the presets
+
+        function nextpage() //goes to the next page of items
+        {
+            document.getElementById("movies").innerHTML=""; //get our info
+            j = j + 1; //change where we are in terms of page
+            var a = j * per_page; //update our a
+            appendData(d, a); //append data to update visually
+        }
+
+        function previouspage() //goes to the previous page
+        {
+            document.getElementById("movies").innerHTML=""; //similar to next page
+            if(j > 0)
+            {
+                j = j - 1; //here is the way we are "going back"
+            }
+            var a = j * per_page;
+            appendData(d, a); //update and we are one page back
+        }
+
+        function appendData(data, b) { //this function appends data and helps us update
+            var mainContainer = document.getElementById("movies");
+            for (var i = b; i < b + per_page; i++) {
+                var div1 = document.createElement("div");
+                div1.className = "card bg-dark text-white";
+                var div2 = document.createElement("div");
+                div2.className = "card-body";
+                var h4 = document.createElement("h4");
+                h4.className = "card-title";
+                var p = document.createElement("p");
+                p.className = "card-text";
+                var br = document.createElement("br");
+                h4.innerHTML = data[i].title;
+                p.innerHTML = 'Year: ' + data[i].year + '; Cast: ' + data[i].cast + '; Genres: ' + data[i].genres;
+                mainContainer.appendChild(div1);
+                div1.appendChild(div2);
+                div2.appendChild(h4);
+                div2.appendChild(p);
+                mainContainer.appendChild(br); //container here and above is made to simplify and make uniform
+            }
+        }
+
+        /*Explanation of html here, because for whatever reason comments are not working up in the HTML section. In the
+        style section, there are many changes to the various buttons, the text, the blocks, and background by changing
+        the font and colors to make the website unique and standout somewhat. In the actual HTML part, the buttons that
+        were already there served to sort by latest and go to the previous and next page. I added the functionality to
+        sort by oldest, by name, searching for a movie or movie titles that contain the searched characters (at this
+        time I could not get it to work properly), changing how many items are displayed by the given numbers or a user
+        defined number (the user defined at this time also has some problems). All in all though, the functionality
+        of the buttons and getting user input as well as updating the data displayed is interesting to study and play
+        with. CSS was used immensely, and it is a very helpful tool, as well as javascript. I prefer it to the other
+        method provided. I definitely could have, and should have, relied on jQuery more, and I am sure that is the key
+        to the search function and more. Another way of implementation would be the method used in the other template
+        relying mostly on python and various html files. The great thing about programming and software development is
+        that there is not just one way to do things. Some might be better than others, but in the end if careful plans
+        and cool heads prevail, it is a lot of fun!
+         */
+    </script>
+</body>
+</html>
